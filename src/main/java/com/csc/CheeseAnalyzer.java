@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CheeseAnalyzer {
     String fileName;
@@ -20,20 +22,38 @@ public class CheeseAnalyzer {
     public void analyzeCheeseData(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
-            String line = reader.readLine();
+            String line = reader.readLine(); // skip header
 
             while ((line = reader.readLine()) != null) {
 
-                String[] data = line.split(",");
+                String formattedLine = removeCommasInQuotes(line);
+
+                String[] data = formattedLine.split(",");
+                fillEmptyFields(data);
+
                 String milkTreatmentType = data[9];
-                double moisturePercent = Double.parseDouble(data[3]);
-                int organic = Integer.parseInt(data[6]);
                 String animal = data[8].toLowerCase();
+
+                double moisturePercent;
+                if(data[3].equals("NULL")) {
+                    moisturePercent = 0.0;
+                } else {
+                    moisturePercent = Double.parseDouble(data[3]);
+                }
+
+                int organic;
+                if(data[6].equals("NULL")) {
+                    organic = -1;
+                } else {
+                    organic = Integer.parseInt(data[6]);
+                }
 
                 if (milkTreatmentType.equals("Raw Milk")) {
                     number_of_raw_milk++;
-                } else {
+                } else if(milkTreatmentType.equals("Pasteurized")) {
                     number_of_pasteurized_milk++;
+                } else {
+                    continue;
                 }
 
                 if (moisturePercent > 41.0 && organic == 1) {
@@ -53,6 +73,22 @@ public class CheeseAnalyzer {
                     case "buffalo":
                         number_of_cheese_from_buffalo++;
                         break;
+                    case "cow and goat":
+                        number_of_cheese_from_cow++;
+                        number_of_cheese_from_goat++;
+                    case "ewe and cow":
+                        number_of_cheese_from_ewe++;
+                        number_of_cheese_from_goat++;
+                    case "ewe and goat": 
+                        number_of_cheese_from_ewe++;
+                        number_of_cheese_from_goat++;
+                    case "buffalo cow":
+                        number_of_cheese_from_buffalo++;
+                        number_of_cheese_from_cow++;
+                    case "cow goat and ewe":
+                        number_of_cheese_from_buffalo++;
+                        number_of_cheese_from_goat++;
+                        number_of_cheese_from_ewe++;
                     default:
                         System.err.println("Unknown animal type: " + animal);
                         break;
@@ -79,7 +115,7 @@ public class CheeseAnalyzer {
             writer.write("The number of cheeses that use pasteurized milk is: " + number_of_pasteurized_milk);
             writer.write("\nThe number of cheeses that use raw milk is: " + number_of_raw_milk);
             writer.write("\nThe number of organic cheeses that have a moisture percentage greater than 41.0% is: " + number_of_organic_cheese_moisture_greater_than_forty_percent);
-            writer.write("\nThe animal that most cheeses in Canada comes from is: " + mostAnimal);
+            writer.write("\nThe animal that most cheeses in Canada comes from are: " + mostAnimal);
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,6 +132,30 @@ public class CheeseAnalyzer {
         } else {
             return "Buffalos";
         }
+    }
+
+    public void fillEmptyFields(String[] data) {
+        for(int i = 0; i < data.length; i++) {
+            if(data[i].trim().isEmpty()) {
+                data[i] = "NULL";
+            }
+        }
+    }
+
+    public String removeCommasInQuotes(String line) {
+        // Use regex to find quoted strings and replace commas inside them
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"");
+        Matcher matcher = pattern.matcher(line);
+        
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            // Replace commas in the quoted string
+            String quotedString = matcher.group(1).replace(",", "");
+            matcher.appendReplacement(sb, "\"" + quotedString + "\"");
+        }
+        matcher.appendTail(sb);
+        
+        return sb.toString();
     }
 
     public static void main(String[] args) {
