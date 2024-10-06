@@ -10,7 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CheeseAnalyzer {
-    String fileName;
+    String fileName; 
+
+    // counters for data
     int number_of_pasteurized_milk = 0,
         number_of_raw_milk = 0,
         number_of_organic_cheese_moisture_greater_than_forty_percent = 0,
@@ -19,19 +21,33 @@ public class CheeseAnalyzer {
         number_of_cheese_from_ewe = 0,
         number_of_cheese_from_buffalo = 0;
 
+    /*
+     * This method takes each line of cheese data, processes it, and then analyzes it. It utilizes helper functions
+     * removeCommasInQuotes(), and fillEmptyFields(). From there, it takes relevant data from each line of code
+     * and stores it into various counter variables.
+     * @param fileName, String, file to be analyzed
+     */
     public void analyzeCheeseData(String fileName) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
             String line = reader.readLine(); // skip header
 
+            // while-loop for reading the text file
             while ((line = reader.readLine()) != null) {
 
+                // removes the commas inside quotes of a line
                 String formattedLine = removeCommasInQuotes(line);
 
+                // splits each data column by commas and stores it into a String array
                 String[] data = formattedLine.split(",");
+
+                // fills any empty data values with "NULL"
                 fillEmptyFields(data);
 
-                String milkTreatmentType = data[9];
+                // assigns milkTreatmentType from column 8
+                String milkTreatmentType = data[9].toLowerCase();
+
+
                 String animal = data[8].toLowerCase();
 
                 double moisturePercent;
@@ -48,9 +64,9 @@ public class CheeseAnalyzer {
                     organic = Integer.parseInt(data[6]);
                 }
 
-                if (milkTreatmentType.equals("Raw Milk")) {
+                if (milkTreatmentType.equals("raw milk")) {
                     number_of_raw_milk++;
-                } else if(milkTreatmentType.equals("Pasteurized")) {
+                } else if(milkTreatmentType.equals("pasteurized")) {
                     number_of_pasteurized_milk++;
                 } else {
                     continue;
@@ -76,21 +92,27 @@ public class CheeseAnalyzer {
                     case "cow and goat":
                         number_of_cheese_from_cow++;
                         number_of_cheese_from_goat++;
+                        break;
                     case "ewe and cow":
                         number_of_cheese_from_ewe++;
                         number_of_cheese_from_goat++;
+                        break;
                     case "ewe and goat": 
                         number_of_cheese_from_ewe++;
                         number_of_cheese_from_goat++;
+                        break;
                     case "buffalo cow":
                         number_of_cheese_from_buffalo++;
                         number_of_cheese_from_cow++;
-                    case "cow goat and ewe":
+                        break;
+                    case "\"cow goat and ewe\"":
                         number_of_cheese_from_buffalo++;
                         number_of_cheese_from_goat++;
                         number_of_cheese_from_ewe++;
+                        break;
                     default:
                         System.err.println("Unknown animal type: " + animal);
+                        System.out.println(data[0]);
                         break;
                 }
             }
@@ -115,7 +137,7 @@ public class CheeseAnalyzer {
             writer.write("The number of cheeses that use pasteurized milk is: " + number_of_pasteurized_milk);
             writer.write("\nThe number of cheeses that use raw milk is: " + number_of_raw_milk);
             writer.write("\nThe number of organic cheeses that have a moisture percentage greater than 41.0% is: " + number_of_organic_cheese_moisture_greater_than_forty_percent);
-            writer.write("\nThe animal that most cheeses in Canada comes from are: " + mostAnimal);
+            writer.write("\nThe animal that most cheeses in Canada comes from are " + mostAnimal + " with " + number_of_cheese_from_cow + " total products.");
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
