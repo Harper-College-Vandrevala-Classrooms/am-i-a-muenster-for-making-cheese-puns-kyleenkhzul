@@ -47,9 +47,10 @@ public class CheeseAnalyzer {
                 // assigns milkTreatmentType from column 8
                 String milkTreatmentType = data[9].toLowerCase();
 
-
+                // assigns type of animal from column 7
                 String animal = data[8].toLowerCase();
 
+                // checks if able to parse moisture % into double
                 double moisturePercent;
                 if(data[3].equals("NULL")) {
                     moisturePercent = 0.0;
@@ -57,6 +58,7 @@ public class CheeseAnalyzer {
                     moisturePercent = Double.parseDouble(data[3]);
                 }
 
+                // checks if able to parse organic # into int
                 int organic;
                 if(data[6].equals("NULL")) {
                     organic = -1;
@@ -64,18 +66,22 @@ public class CheeseAnalyzer {
                     organic = Integer.parseInt(data[6]);
                 }
 
+                // counts whether treatment type is from raw milk or pasteurized
                 if (milkTreatmentType.equals("raw milk")) {
                     number_of_raw_milk++;
                 } else if(milkTreatmentType.equals("pasteurized")) {
                     number_of_pasteurized_milk++;
                 } else {
-                    continue;
+                    continue; // if neither, just continue
                 }
 
+                // checks for if the cheese is organic AND moisture % is greater than 41.0
                 if (moisturePercent > 41.0 && organic == 1) {
                     number_of_organic_cheese_moisture_greater_than_forty_percent++;
                 }
 
+                // switch case for counter variables for what animal the cheese comes from
+                // accounts for special cases present in the CSV file
                 switch (animal) {
                     case "cow":
                         number_of_cheese_from_cow++;
@@ -124,8 +130,13 @@ public class CheeseAnalyzer {
         }
     }
 
+    /*
+     * This function writes the results of the analysis to an output.txt file. It utilizes a helper function compareMostCheesesFromAnAnimal();
+     */
     public void writeAnalysisResult() {
         try {
+
+            // returns which animal has the most products
             String mostAnimal = compareMostCheesesFromAnAnimal(
                 number_of_cheese_from_cow,
                 number_of_cheese_from_goat,
@@ -133,6 +144,7 @@ public class CheeseAnalyzer {
                 number_of_cheese_from_buffalo
             );
 
+            // writing to output.txt
             BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"));
             writer.write("The number of cheeses that use pasteurized milk is: " + number_of_pasteurized_milk);
             writer.write("\nThe number of cheeses that use raw milk is: " + number_of_raw_milk);
@@ -144,6 +156,15 @@ public class CheeseAnalyzer {
         }
     }
 
+    /*
+     * This function compares the most cheeses from each animal and returns which animal has the greatest
+     * amount of products
+     * @param int, amount of cow cheese products
+     * @param int, amount of goat cheese products
+     * @param int, amount of ewe cheese products
+     * @param int, amount of buffalo cheese products
+     * @return Animal with highest # of products
+     */
     public String compareMostCheesesFromAnAnimal(int cow, int goat, int ewe, int buffalo) {
         if (cow > goat && cow > ewe && cow > buffalo) {
             return "Cows";
@@ -156,6 +177,10 @@ public class CheeseAnalyzer {
         }
     }
 
+    /*
+     * This helper function fills empty fields within a String array of data with NULL
+     * @param data, String array to be analyzed
+     */
     public void fillEmptyFields(String[] data) {
         for(int i = 0; i < data.length; i++) {
             if(data[i].trim().isEmpty()) {
@@ -164,6 +189,11 @@ public class CheeseAnalyzer {
         }
     }
 
+    /*
+     * This helper function takes a String of line and removes any commas within quotes.
+     * @param line, String to be processed
+     * @return processed string without commas in quotes
+     */
     public String removeCommasInQuotes(String line) {
         // Use regex to find quoted strings and replace commas inside them
         Pattern pattern = Pattern.compile("\"([^\"]*)\"");
@@ -176,7 +206,6 @@ public class CheeseAnalyzer {
             matcher.appendReplacement(sb, "\"" + quotedString + "\"");
         }
         matcher.appendTail(sb);
-        
         return sb.toString();
     }
 
