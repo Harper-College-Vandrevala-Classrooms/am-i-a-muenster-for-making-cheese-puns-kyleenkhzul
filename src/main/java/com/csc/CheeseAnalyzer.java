@@ -117,8 +117,7 @@ public class CheeseAnalyzer {
                         number_of_cheese_from_ewe++;
                         break;
                     default:
-                        System.err.println("Unknown animal type: " + animal);
-                        System.out.println(data[0]);
+                        System.err.println("Unknown animal type: " + animal " at ID: " + data[0]);
                         break;
                 }
             }
