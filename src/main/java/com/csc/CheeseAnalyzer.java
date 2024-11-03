@@ -20,6 +20,10 @@ public class CheeseAnalyzer {
         number_of_cheese_from_goat = 0,
         number_of_cheese_from_ewe = 0,
         number_of_cheese_from_buffalo = 0;
+    double moisturePercent = 0.0,
+           moisturePercentSum = 0.0,
+           moistureCount = 0.0,
+           moisturePercentAverage = 0.0;
 
     /*
      * This method takes each line of cheese data, processes it, and then analyzes it. It utilizes helper functions
@@ -51,12 +55,15 @@ public class CheeseAnalyzer {
                 String animal = data[8].toLowerCase();
 
                 // checks if able to parse moisture % into double
-                double moisturePercent;
                 if(data[3].equals("NULL")) {
                     moisturePercent = 0.0;
                 } else {
                     moisturePercent = Double.parseDouble(data[3]);
                 }
+
+                // sum moisture percentage and count number of moisture values
+                moisturePercentSum += moisturePercent;
+                moistureCount++;
 
                 // checks if able to parse organic # into int
                 int organic;
@@ -117,7 +124,7 @@ public class CheeseAnalyzer {
                         number_of_cheese_from_ewe++;
                         break;
                     default:
-                        System.err.println("Unknown animal type: " + animal " at ID: " + data[0]);
+                        System.err.println("Unknown animal type: " + animal + " at ID: " + data[0]);
                         break;
                 }
             }
@@ -143,12 +150,17 @@ public class CheeseAnalyzer {
                 number_of_cheese_from_buffalo
             );
 
+            // calculate average moisture percentage
+            moisturePercentAverage = moisturePercentSum/moistureCount;
+            String formattedMoisturePercentAverage = String.format("%.2f", moisturePercentAverage);
+
             // writing to output.txt
             BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"));
             writer.write("The number of cheeses that use pasteurized milk is: " + number_of_pasteurized_milk);
             writer.write("\nThe number of cheeses that use raw milk is: " + number_of_raw_milk);
             writer.write("\nThe number of organic cheeses that have a moisture percentage greater than 41.0% is: " + number_of_organic_cheese_moisture_greater_than_forty_percent);
             writer.write("\nThe animal that most cheeses in Canada comes from are " + mostAnimal + " with " + number_of_cheese_from_cow + " total products.");
+            writer.write("\nThe average moisture percentage of the cheese is: " + formattedMoisturePercentAverage + "%");
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -208,9 +220,78 @@ public class CheeseAnalyzer {
         return sb.toString();
     }
 
+    /*
+     * This function removes the header line of the CSV file.
+     */
+    public void removeHeaderofCSVFile() {
+        String inputFilePath = "cheese_data.csv";  // Original file with headers
+        String outputFilePath = "cheese_without_headers.csv";  // New file without headers
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
+             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
+
+            // Skip the first line (headers)
+            reader.readLine();
+
+            // Copy the remaining lines to the new file
+            String line;
+            while ((line = reader.readLine()) != null) {
+                writer.write(line);
+                writer.newLine();
+            }
+
+            System.out.println("Data copied without headers to " + outputFilePath);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /* 
+     * This function removes the CheeseID column from the CSV file.
+     */
+    public void removeCheeseIDofCSVFile() {
+        String inputFilePath = "cheese_data.csv";  // Original file with CheeseId column
+        String outputFilePath = "cheese_without_ids.csv";  // New file without CheeseId column
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
+             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
+
+            String line;
+            while((line = reader.readLine()) != null) {
+                // removes the commas inside quotes of a line
+                String formattedLine = removeCommasInQuotes(line);
+
+                // splits each data column by commas and stores it into a String array
+                String[] data = formattedLine.split(",");
+
+                // fills any empty data values with "NULL"
+                fillEmptyFields(data);
+
+                // Write data excluding the first column (CheeseId)
+                for (int i = 1; i < data.length; i++) {
+                    writer.write(data[i]);
+                    if (i < data.length - 1) {
+                        writer.write(",");  // Add comma between values except for the last one
+                    }
+                }
+                writer.newLine();
+            }
+
+            System.out.println("Data copied without CheeseId column to " + outputFilePath);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     public static void main(String[] args) {
         CheeseAnalyzer analyzer = new CheeseAnalyzer();
         analyzer.analyzeCheeseData("cheese_data.csv");
         analyzer.writeAnalysisResult();
+
+        analyzer.removeHeaderofCSVFile();
+        analyzer.removeCheeseIDofCSVFile();
     }
 }
